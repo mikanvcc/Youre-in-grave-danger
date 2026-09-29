@@ -24,16 +24,39 @@ import net.neoforged.bus.api.EventPriority;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
+import net.neoforged.neoforge.event.entity.living.LivingDestroyBlockEvent;
 import net.neoforged.neoforge.event.entity.living.LivingDropsEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
+import net.neoforged.neoforge.event.level.BlockEvent;
+import net.neoforged.neoforge.event.level.ExplosionEvent;
 import net.neoforged.neoforge.event.server.ServerStartedEvent;
 import net.neoforged.neoforge.event.tick.PlayerTickEvent;
 import net.neoforged.neoforge.event.tick.ServerTickEvent;
 import net.neoforged.neoforge.network.PacketDistributor;
+import net.neoforged.neoforge.common.util.FakePlayer;
 
 import java.util.*;
 
 public class ServerEventHandler {
+    @SubscribeEvent(priority = EventPriority.LOWEST)
+    public void protectGravesFromExplosions(ExplosionEvent.Detonate event) {
+        event.getAffectedBlocks().removeIf(pos -> event.getLevel().getBlockState(pos).is(Yigd.GRAVE.get()));
+    }
+
+    @SubscribeEvent(priority = EventPriority.LOWEST)
+    public void protectGravesFromEntities(LivingDestroyBlockEvent event) {
+        if (event.getState().is(Yigd.GRAVE.get()) && !(event.getEntity() instanceof Player)) {
+            event.setCanceled(true);
+        }
+    }
+
+    @SubscribeEvent(priority = EventPriority.LOWEST)
+    public void protectGravesFromAutomation(BlockEvent.BreakEvent event) {
+        if (event.getPlayer() instanceof FakePlayer && event.getState().is(Yigd.GRAVE.get())) {
+            event.setCanceled(true);
+        }
+    }
+
     @SubscribeEvent
     public void onEndOfTick(ServerTickEvent.Post event) {
         List<Runnable> methodsToRun = new ArrayList<>(Yigd.END_OF_TICK);
