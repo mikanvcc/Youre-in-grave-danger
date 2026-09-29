@@ -121,6 +121,11 @@ public class GraveBlockEntity extends BlockEntity {
         if (this.level == null || this.level.isClientSide) return;
 
         Yigd.END_OF_TICK.add(() -> {
+            if (this.level.getBlockEntity(this.worldPosition) instanceof GraveBlockEntity replacement
+                    && this.graveId != null && this.graveId.equals(replacement.getGraveId())) {
+                return;
+            }
+
             Optional<GraveComponent> component = DeathInfoManager.INSTANCE.getGrave(this.graveId);
             component.ifPresent(grave -> {
                 if (grave.getStatus() == GraveStatus.UNCLAIMED) {
