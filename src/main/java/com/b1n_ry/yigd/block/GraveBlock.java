@@ -42,6 +42,7 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.level.Explosion;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.phys.BlockHitResult;
@@ -65,6 +66,16 @@ public class GraveBlock extends BaseEntityBlock implements EntityBlock {
 
     public GraveBlock(Properties properties) {
         super(properties);
+    }
+
+    @Override
+    public boolean canEntityDestroy(BlockState state, BlockGetter level, BlockPos pos, Entity entity) {
+        return entity instanceof Player && !(entity instanceof FakePlayer);
+    }
+
+    @Override
+    public void onBlockExploded(BlockState state, Level level, BlockPos pos, Explosion explosion) {
+        // Keep the grave intact if an explosion implementation bypasses the affected-block event list.
     }
 
     @Override
@@ -269,6 +280,8 @@ public class GraveBlock extends BaseEntityBlock implements EntityBlock {
 
     @Override
     protected float getDestroyProgress(@NotNull BlockState state, @NotNull Player player, @NotNull BlockGetter level, @NotNull BlockPos pos) {
+        if (player instanceof FakePlayer) return 0.0f;
+
         if (!(level.getBlockEntity(pos) instanceof GraveBlockEntity grave) || !grave.isUnclaimed()
                 || YigdConfig.getConfig().graveConfig.retrieveMethods.onBreak) {
             // Same calculations as done for "normal" blocks, except with the overwritten destroy speed of 0.8
